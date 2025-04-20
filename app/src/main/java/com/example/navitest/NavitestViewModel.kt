@@ -20,4 +20,6 @@ class NavitestViewModel : ViewModel() {
     val routers           = mutableStateListOf<Offset>()
     val scanIntervalSeconds = mutableStateOf(5)
     val scanResults       = mutableStateListOf<ScanResult>()
+    val floorWidthMeters = mutableStateOf(0f)   // input by user or hardcoded
+    val floorHeightMeters = mutableStateOf(0f)
 }

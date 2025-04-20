@@ -53,6 +53,10 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.foundation:foundation:1.6.1") // for zoomable
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
+    implementation("com.github.yalantis:ucrop:2.2.8")
+
 
 
     testImplementation(libs.junit)
