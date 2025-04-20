@@ -22,6 +22,7 @@ fun ScanConfigScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .systemBarsPadding()
     ) {
         Text("⏱️ Scan Interval: $interval s")
         Spacer(Modifier.height(16.dp))

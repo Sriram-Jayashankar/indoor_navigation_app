@@ -20,6 +20,7 @@ fun RouterPlacementScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .systemBarsPadding()
     ) {
         Text("📍 Router Placement Screen\n\n— drag & drop routers on your map")
         Spacer(modifier = Modifier.height(24.dp))

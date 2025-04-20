@@ -20,6 +20,7 @@ fun FloorMapScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .systemBarsPadding()
     ) {
         Text("📸 Floor Map Screen\n\n— upload & preview your floor plan here")
         Spacer(modifier = Modifier.height(24.dp))

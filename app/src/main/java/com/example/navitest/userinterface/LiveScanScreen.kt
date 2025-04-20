@@ -23,6 +23,7 @@ fun LiveScanScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .systemBarsPadding()
     ) {
         Text("📡 Live Scan\n\n— scanning Wi‑Fi (not yet implemented)")
         Spacer(Modifier.height(24.dp))

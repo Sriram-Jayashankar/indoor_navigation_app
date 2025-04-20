@@ -20,6 +20,7 @@ fun TrilaterationScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .systemBarsPadding()
     ) {
         Text("📐 Trilateration\n\n— calculate & preview your location")
         Spacer(Modifier.height(24.dp))
