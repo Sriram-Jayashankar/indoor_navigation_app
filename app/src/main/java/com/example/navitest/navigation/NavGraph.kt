@@ -17,6 +17,8 @@ sealed class Screen(val route: String) {
     object Trilateration : Screen("trilateration")
     object Results : Screen("results")
     object Settings : Screen("settings")
+    object PathGraphEditor : Screen("path_graph_editor")
+
 }
 
 @Composable
@@ -49,5 +51,9 @@ fun NavGraph(
         composable(Screen.Settings.route) {
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
+        composable(Screen.PathGraphEditor.route) {
+            PathGraphEditorScreen( viewModel = viewModel,navController = navController)
+        }
+
     }
 }

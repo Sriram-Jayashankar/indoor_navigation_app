@@ -53,7 +53,7 @@ fun FloorMapScreen(
                 val width = widthInput.toFloat()
                 val height = heightInput.toFloat()
 
-                val destFile = File(context.cacheDir, "cropped_image.png")
+                val destFile = File(context.filesDir, "floorplan.png") // ✅ permanent storage
                 val destUri = FileProvider.getUriForFile(
                     context,
                     "${context.packageName}.fileprovider",
@@ -70,7 +70,7 @@ fun FloorMapScreen(
     )
 
     // UI layout
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    Column(Modifier.fillMaxSize().padding(16.dp).systemBarsPadding()) {
         Text("📏 Enter Real-world Dimensions", style = MaterialTheme.typography.titleMedium)
 
         Spacer(Modifier.height(8.dp))
@@ -132,6 +132,14 @@ fun FloorMapScreen(
                 viewModel.floorMapUri.value = croppedImageUri
                 viewModel.floorWidthMeters.value = widthInput.toFloat()
                 viewModel.floorHeightMeters.value = heightInput.toFloat()
+                val prefs = context.getSharedPreferences("navitest_prefs", Context.MODE_PRIVATE)
+                prefs.edit().apply {
+                    putBoolean("hasPreviousImage", true)
+                    putString("imagePath", "floorplan.png")
+                    putFloat("widthMeters", widthInput.toFloat())
+                    putFloat("heightMeters", heightInput.toFloat())
+                    apply()
+                }
                 navController.navigate(Screen.Trilateration.route) // or PathGraphEditor if defined
             },
             enabled = croppedImageUri != null &&
