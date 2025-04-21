@@ -4,6 +4,9 @@ import android.net.Uri
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.example.navitest.model.Node
+import com.example.navitest.model.Edge
+
 import androidx.compose.ui.geometry.Offset
 
 /**
@@ -16,10 +19,18 @@ import androidx.compose.ui.geometry.Offset
 data class ScanResult(val ssid: String, val rssi: Int)
 
 class NavitestViewModel : ViewModel() {
+    val pathNodes = mutableStateListOf<Node>()
+    val pathEdges = mutableStateListOf<Edge>()
     val floorMapUri       = mutableStateOf<Uri?>(null)
-    val routers           = mutableStateListOf<Offset>()
+    val routers = mutableStateListOf<Router>()
     val scanIntervalSeconds = mutableStateOf(5)
     val scanResults       = mutableStateListOf<ScanResult>()
     val floorWidthMeters = mutableStateOf(0f)   // input by user or hardcoded
     val floorHeightMeters = mutableStateOf(0f)
 }
+data class Router(
+    val id: Int,
+    val x: Float,
+    val y: Float,
+    val ssid: String
+)

@@ -20,10 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.navitest.NavitestViewModel
+import com.example.navitest.model.Edge
+import com.example.navitest.model.Node
 import kotlin.math.*
-
-data class Node(val id: Int, val x: Float, val y: Float)
-data class Edge(val fromId: Int, val toId: Int)
 
 @Composable
 fun PathGraphEditorScreen(
@@ -57,8 +56,11 @@ fun PathGraphEditorScreen(
     val gridSizePxY = imageHeight.toFloat() / divisionsY
 
     var nextId by remember { mutableStateOf(0) }
-    val nodes = remember { mutableStateListOf<Node>() }
-    val edges = remember { mutableStateListOf<Edge>() }
+
+    // ✅ Shared state from ViewModel
+    val nodes = viewModel.pathNodes
+    val edges = viewModel.pathEdges
+
     var startPoint by remember { mutableStateOf<Offset?>(null) }
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
 
@@ -88,7 +90,6 @@ fun PathGraphEditorScreen(
                 Text("Router Setup")
             }
         }
-
 
         Spacer(Modifier.height(8.dp))
 
