@@ -140,7 +140,7 @@ fun FloorMapScreen(
                     putFloat("heightMeters", heightInput.toFloat())
                     apply()
                 }
-                navController.navigate(Screen.Trilateration.route) // or PathGraphEditor if defined
+                navController.navigate(Screen.PathGraphEditor.route)
             },
             enabled = croppedImageUri != null &&
                     widthInput.toFloatOrNull() != null && widthInput.toFloat() > 0 &&

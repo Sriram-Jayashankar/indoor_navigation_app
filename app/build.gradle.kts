@@ -56,6 +56,10 @@ dependencies {
     implementation("androidx.compose.foundation:foundation:1.6.1") // for zoomable
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
     implementation("com.github.yalantis:ucrop:2.2.8")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation(platform("androidx.compose:compose-bom:2024.04.01")) // or latest
 
 
 
