@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.navitest.model.Node
 import com.example.navitest.model.Edge
+import com.example.navitest.model.Router
 
 import androidx.compose.ui.geometry.Offset
 
@@ -28,9 +29,3 @@ class NavitestViewModel : ViewModel() {
     val floorWidthMeters = mutableStateOf(0f)   // input by user or hardcoded
     val floorHeightMeters = mutableStateOf(0f)
 }
-data class Router(
-    val id: Int,
-    val x: Float,
-    val y: Float,
-    val ssid: String
-)
