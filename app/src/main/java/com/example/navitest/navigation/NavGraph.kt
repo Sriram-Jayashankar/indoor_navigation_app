@@ -18,6 +18,8 @@ sealed class Screen(val route: String) {
     object Results : Screen("results")
     object Settings : Screen("settings")
     object PathGraphEditor : Screen("path_graph_editor")
+    object AStarTest : Screen("astar_test")
+
 
 }
 
@@ -54,6 +56,10 @@ fun NavGraph(
         composable(Screen.PathGraphEditor.route) {
             PathGraphEditorScreen( viewModel = viewModel,navController = navController)
         }
+        composable(Screen.AStarTest.route) {
+            AStarTestScreen(navController = navController, viewModel = viewModel)
+        }
+
 
     }
 }
