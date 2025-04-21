@@ -37,5 +37,11 @@ fun HomeScreen(navController: NavHostController,
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
         ) { Text("Settings") }
+
+        Button(onClick = {
+            navController.navigate(Screen.SavedPlans.route)
+        }) {
+            Text("View Saved Floor Plans")
+        }
     }
 }

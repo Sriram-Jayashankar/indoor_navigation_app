@@ -26,6 +26,7 @@ import com.example.navitest.model.Router
 import kotlin.math.roundToInt
 import android.util.Log
 import com.example.navitest.exportMapDataToJson
+import com.example.navitest.navigation.Screen
 
 @Composable
 fun RouterPlacementScreen(
@@ -86,6 +87,7 @@ fun RouterPlacementScreen(
                     routers = viewModel.routers
                 )
                 Log.d("Export", "JSON saved to: ${file.absolutePath}")
+                navController.navigate(Screen.Home.route)
             }) {
                 Text("Export Setup")
             }

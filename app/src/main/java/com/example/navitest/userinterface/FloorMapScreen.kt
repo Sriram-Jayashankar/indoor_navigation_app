@@ -56,7 +56,7 @@ fun FloorMapScreen(
                 val destFile = File(context.filesDir, "floorplan.png") // ✅ permanent storage
                 val destUri = FileProvider.getUriForFile(
                     context,
-                    "${context.packageName}.fileprovider",
+                    "${context.packageName}.provider",
                     destFile
                 )
 

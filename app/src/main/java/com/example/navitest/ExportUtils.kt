@@ -49,7 +49,7 @@ fun exportMapDataToJson(
         })
     }
 
-    val file = File(context.filesDir, "map_export.json")
+    val file = File(context.filesDir, "floorplan_${System.currentTimeMillis()}.json")
     FileOutputStream(file).use {
         it.write(json.toString(2).toByteArray())
     }

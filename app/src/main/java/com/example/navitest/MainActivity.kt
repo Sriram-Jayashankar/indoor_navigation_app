@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                                 TextButton(onClick = {
                                     val uri = FileProvider.getUriForFile(
                                         this@MainActivity,
-                                        "${packageName}.fileprovider",
+                                        "${packageName}.provider",
                                         imageFile!!
                                     )
                                     viewModel.floorMapUri.value = uri
