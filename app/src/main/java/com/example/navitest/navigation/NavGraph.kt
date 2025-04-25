@@ -19,6 +19,10 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object PathGraphEditor : Screen("path_graph_editor")
     object AStarTest : Screen("astar_test")
+    object SavedPlans : Screen("saved_plans")
+    object FindLocation : Screen("find_location")
+
+
 
 
 }
@@ -54,11 +58,19 @@ fun NavGraph(
             SettingsScreen(viewModel = viewModel, navController = navController)
         }
         composable(Screen.PathGraphEditor.route) {
-            PathGraphEditorScreen( viewModel = viewModel,navController = navController)
+            PathGraphEditorScreen(viewModel = viewModel,navController = navController)
         }
         composable(Screen.AStarTest.route) {
-            AStarTestScreen(navController = navController, viewModel = viewModel)
+            AStarTestScreen(viewModel = viewModel,navController = navController)
         }
+        composable(Screen.SavedPlans.route) {
+            SavedPlansScreen(viewModel = viewModel,navController = navController)
+        }
+        composable(Screen.FindLocation.route) {
+            FindLocationScreen(viewModel = viewModel(), navController = navController)
+        }
+
+
 
 
     }
