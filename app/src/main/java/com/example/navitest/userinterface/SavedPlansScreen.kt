@@ -2,6 +2,7 @@ package com.example.navitest.userinterface
 
 import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,13 +16,10 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.navitest.NavitestViewModel
-import com.example.navitest.model.Router
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.logging.Logger
 
 @Composable
 fun SavedPlansScreen(
@@ -156,22 +154,42 @@ fun performLogicAndNavigate(context: android.content.Context, file: File, navCon
         Log.d("MapInfo","ssid = $ssid")
         ssids.add(ssid)
     }
+    val rssiMap = com.example.navitest.wifi.WifiChecker.getRssiReadings(context, ssids)
 
-//    val routerList: List<Router> = try {
-//        val jsonArray = JSONArray(jsonString)
-//        List(jsonArray.length()) { index ->
-//            val obj = jsonArray.getJSONObject(index)
-//            Router(
-//                id = obj.getInt("id"),
-//                x = obj.getDouble("x").toFloat(),
-//                y = obj.getDouble("y").toFloat(),
-//                ssid = obj.getString("ssid")
-//            )
-//        }
-//    } catch (e: Exception) {
-//        e.printStackTrace()
-//        return
+    Log.d("WifiScan", "------ Wi-Fi Scan Results ------")
+    ssids.forEach { ssid ->
+        if (rssiMap.containsKey(ssid)) {
+            Log.d("WifiScan", "✅ Found SSID: $ssid → RSSI: ${rssiMap[ssid]} dBm")
+        } else {
+            Log.e("WifiScan", "❌ Did not find SSID: $ssid")
+        }
+    }
+    Log.d("WifiScan", "--------------------------------")
+
+    if (rssiMap.size < 3) {
+        val foundList = rssiMap.keys
+        val notFoundList = ssids.filterNot { it in foundList }
+
+        val message = buildString {
+            append("❌ Only ${rssiMap.size} / ${ssids.size} routers found.\n\n")
+            append("✅ Found:\n")
+            foundList.forEach { append("- $it\n") }
+            append("❌ Missing:\n")
+            notFoundList.forEach { append("- $it\n") }
+        }
+
+        Log.e("WifiScan", message)
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+
+        return
+    }
+//    val wifiScanner = com.example.navitest.wifi.WifiScanner(context, ssids) { liveRssiMap ->
+//        Log.d("LiveWifiScan", "📶 Live RSSI update: $liveRssiMap")
+//        // Later: feed this into Kalman filter, trilateration, etc.
 //    }
+//
+//    wifiScanner.start()
+
 //    navController.navigate("target_screen_route") // Use the correct route name
 }
 
