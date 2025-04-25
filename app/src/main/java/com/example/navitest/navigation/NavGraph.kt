@@ -21,10 +21,6 @@ sealed class Screen(val route: String) {
     object AStarTest : Screen("astar_test")
     object SavedPlans : Screen("saved_plans")
     object FindLocation : Screen("find_location")
-
-
-
-
 }
 
 @Composable
@@ -65,9 +61,6 @@ fun NavGraph(
         }
         composable(Screen.SavedPlans.route) {
             SavedPlansScreen(viewModel = viewModel,navController = navController)
-        }
-        composable(Screen.FindLocation.route) {
-            FindLocationScreen(viewModel = viewModel(), navController = navController)
         }
 
 

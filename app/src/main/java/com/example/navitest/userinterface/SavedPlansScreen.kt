@@ -1,6 +1,7 @@
 package com.example.navitest.userinterface
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,9 +15,13 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.navitest.NavitestViewModel
+import com.example.navitest.model.Router
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.logging.Logger
 
 @Composable
 fun SavedPlansScreen(
@@ -62,6 +67,11 @@ fun SavedPlansScreen(
                                 showRenameDialogFor = file
                             }) {
                                 Text("Rename")
+                            }
+                            Button(onClick = {
+                                performLogicAndNavigate(context, file, navController)
+                            }) {
+                                Text("Open")
                             }
                         }
                     }
@@ -132,3 +142,36 @@ fun shareFile(context: android.content.Context, file: File) {
 
     context.startActivity(Intent.createChooser(intent, "Share Floor Plan"))
 }
+
+fun performLogicAndNavigate(context: android.content.Context, file: File, navController: NavHostController) {
+    val jsonString = file.readText()
+    val jsonObject = JSONObject(jsonString)
+
+    val routersJsonArray = jsonObject.getJSONArray("routers")
+    val ssids = mutableListOf<String>()
+
+    for (i in 0 until routersJsonArray.length()) {
+        val routerObject = routersJsonArray.getJSONObject(i)
+        val ssid = routerObject.getString("ssid")
+        Log.d("MapInfo","ssid = $ssid")
+        ssids.add(ssid)
+    }
+
+//    val routerList: List<Router> = try {
+//        val jsonArray = JSONArray(jsonString)
+//        List(jsonArray.length()) { index ->
+//            val obj = jsonArray.getJSONObject(index)
+//            Router(
+//                id = obj.getInt("id"),
+//                x = obj.getDouble("x").toFloat(),
+//                y = obj.getDouble("y").toFloat(),
+//                ssid = obj.getString("ssid")
+//            )
+//        }
+//    } catch (e: Exception) {
+//        e.printStackTrace()
+//        return
+//    }
+//    navController.navigate("target_screen_route") // Use the correct route name
+}
+
