@@ -13,6 +13,7 @@ import com.example.navitest.userinterface.theme.NavitestTheme
 import java.io.File
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.navitest.utils.LocationPermissionHelper
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +26,11 @@ class MainActivity : ComponentActivity() {
         val height = prefs.getFloat("heightMeters", 0f)
         val imagePath = prefs.getString("imagePath", null)
         val imageFile = imagePath?.let { File(filesDir, it) }
+
+        // Check if we have the needed location permissons before UI render
+        if (!LocationPermissionHelper.hasLocationPermission(this)) {
+            LocationPermissionHelper.requestLocationPermission(this)
+        }
 
         // Create content
         setContent {
