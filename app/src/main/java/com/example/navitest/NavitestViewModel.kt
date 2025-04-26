@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import com.example.navitest.model.Node
 import com.example.navitest.model.Edge
 import com.example.navitest.model.Router
-
+import com.example.navitest.model.Room
 import androidx.compose.ui.geometry.Offset
 
 /**
@@ -28,4 +28,5 @@ class NavitestViewModel : ViewModel() {
     val scanResults       = mutableStateListOf<ScanResult>()
     val floorWidthMeters = mutableStateOf(0f)   // input by user or hardcoded
     val floorHeightMeters = mutableStateOf(0f)
+    val rooms = mutableStateListOf<Room>()
 }

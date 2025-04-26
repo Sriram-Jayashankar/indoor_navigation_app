@@ -9,6 +9,7 @@ import java.io.FileOutputStream
 import com.example.navitest.model.Node
 import com.example.navitest.model.Edge
 import com.example.navitest.model.Router
+import com.example.navitest.model.Room
 
 fun exportFullMapData(
     context: Context,
@@ -17,11 +18,11 @@ fun exportFullMapData(
     nodes: List<Node>,
     edges: List<Edge>,
     routers: List<Router>,
-    bitmap: Bitmap // 🖼 pass the floor plan bitmap too
-): Pair<File, File> { // ⬅️ Return (json file, image file)
+    rooms: List<Room>,
+    bitmap: Bitmap
+): Pair<File, File> {
     val timestamp = System.currentTimeMillis()
 
-    // 1. Save JSON
     val json = JSONObject().apply {
         put("widthMeters", widthMeters)
         put("heightMeters", heightMeters)
@@ -52,6 +53,16 @@ fun exportFullMapData(
                 })
             }
         })
+        put("rooms", JSONArray().apply {
+            rooms.forEach { room ->
+                put(JSONObject().apply {
+                    put("id", room.id)
+                    put("x", room.x)
+                    put("y", room.y)
+                    put("name", room.name)
+                })
+            }
+        })
     }
 
     val jsonFile = File(context.filesDir, "floorplan_${timestamp}.json")
@@ -59,7 +70,6 @@ fun exportFullMapData(
         it.write(json.toString(2).toByteArray())
     }
 
-    // 2. Save floor plan image
     val imageFile = File(context.filesDir, "floorplan_${timestamp}.png")
     FileOutputStream(imageFile).use { fos ->
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
@@ -67,3 +77,4 @@ fun exportFullMapData(
 
     return Pair(jsonFile, imageFile)
 }
+
