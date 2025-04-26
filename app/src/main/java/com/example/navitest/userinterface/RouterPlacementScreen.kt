@@ -25,7 +25,7 @@ import com.example.navitest.NavitestViewModel
 import com.example.navitest.model.Router
 import kotlin.math.roundToInt
 import android.util.Log
-import com.example.navitest.exportMapDataToJson
+import com.example.navitest.exportFullMapData
 import com.example.navitest.navigation.Screen
 
 @Composable
@@ -45,13 +45,13 @@ fun RouterPlacementScreen(
         return
     }
 
-    val bitmap = remember(imageUri) {
+    val bitmapimage = remember(imageUri) {
         val input = context.contentResolver.openInputStream(imageUri)
         BitmapFactory.decodeStream(input)
     } ?: return
 
-    val imageWidth = bitmap.width
-    val imageHeight = bitmap.height
+    val imageWidth = bitmapimage.width
+    val imageHeight = bitmapimage.height
 
     val stepMeters = 0.25f
     val divisionsX = (floorWidthMeters / stepMeters).toInt()
@@ -78,15 +78,17 @@ fun RouterPlacementScreen(
                 Text("Clear Routers")
             }
             Button(onClick = {
-                val file = exportMapDataToJson(
+                val (jsonFile, imageFile) = exportFullMapData(
                     context = context,
                     widthMeters = viewModel.floorWidthMeters.value,
                     heightMeters = viewModel.floorHeightMeters.value,
                     nodes = viewModel.pathNodes,
                     edges = viewModel.pathEdges,
-                    routers = viewModel.routers
+                    routers = viewModel.routers,
+                    bitmap = bitmapimage // ⬅️ Pass bitmap loaded earlier
                 )
-                Log.d("Export", "JSON saved to: ${file.absolutePath}")
+                Log.d("Export", "Saved JSON: ${jsonFile.absolutePath}")
+                Log.d("Export", "Saved Image: ${imageFile.absolutePath}")
                 navController.navigate(Screen.Home.route)
             }) {
                 Text("Export Setup")
@@ -124,7 +126,7 @@ fun RouterPlacementScreen(
                 withTransform({
                     translate(offsetX, offsetY)
                 }) {
-                    drawImage(bitmap.asImageBitmap())
+                    drawImage(bitmapimage.asImageBitmap())
 
                     // ✅ Draw routers with SSID text
                     for (router in viewModel.routers) {

@@ -1,6 +1,7 @@
 package com.example.navitest
 
 import android.content.Context
+import android.graphics.Bitmap
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -9,14 +10,18 @@ import com.example.navitest.model.Node
 import com.example.navitest.model.Edge
 import com.example.navitest.model.Router
 
-fun exportMapDataToJson(
+fun exportFullMapData(
     context: Context,
     widthMeters: Float,
     heightMeters: Float,
     nodes: List<Node>,
     edges: List<Edge>,
-    routers: List<Router>
-): File {
+    routers: List<Router>,
+    bitmap: Bitmap // 🖼 pass the floor plan bitmap too
+): Pair<File, File> { // ⬅️ Return (json file, image file)
+    val timestamp = System.currentTimeMillis()
+
+    // 1. Save JSON
     val json = JSONObject().apply {
         put("widthMeters", widthMeters)
         put("heightMeters", heightMeters)
@@ -49,10 +54,16 @@ fun exportMapDataToJson(
         })
     }
 
-    val file = File(context.filesDir, "floorplan_${System.currentTimeMillis()}.json")
-    FileOutputStream(file).use {
+    val jsonFile = File(context.filesDir, "floorplan_${timestamp}.json")
+    FileOutputStream(jsonFile).use {
         it.write(json.toString(2).toByteArray())
     }
 
-    return file
+    // 2. Save floor plan image
+    val imageFile = File(context.filesDir, "floorplan_${timestamp}.png")
+    FileOutputStream(imageFile).use { fos ->
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+    }
+
+    return Pair(jsonFile, imageFile)
 }

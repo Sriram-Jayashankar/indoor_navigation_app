@@ -22,7 +22,7 @@ data class ScanResult(val ssid: String, val rssi: Int)
 class NavitestViewModel : ViewModel() {
     val pathNodes = mutableStateListOf<Node>()
     val pathEdges = mutableStateListOf<Edge>()
-    val floorMapUri       = mutableStateOf<Uri?>(null)
+    val floorMapUri = mutableStateOf<Uri?>(null)
     val routers = mutableStateListOf<Router>()
     val scanIntervalSeconds = mutableStateOf(5)
     val scanResults       = mutableStateListOf<ScanResult>()
