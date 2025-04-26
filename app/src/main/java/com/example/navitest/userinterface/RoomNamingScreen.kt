@@ -3,8 +3,6 @@ package com.example.navitest.userinterface
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,23 +11,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.navitest.NavitestViewModel
-import com.example.navitest.model.Router
+import com.example.navitest.exportFullMapData
+import com.example.navitest.model.Room
+import com.example.navitest.navigation.Screen
 import kotlin.math.roundToInt
 import android.util.Log
-import com.example.navitest.exportFullMapData
-import com.example.navitest.navigation.Screen
 
 @Composable
-fun RouterPlacementScreen(
+fun RoomNamingScreen(
     navController: NavHostController,
     viewModel: NavitestViewModel = viewModel()
 ) {
@@ -61,8 +61,8 @@ fun RouterPlacementScreen(
 
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     var showDialog by remember { mutableStateOf(false) }
-    var newRouterOffset by remember { mutableStateOf<Offset?>(null) }
-    var ssidInput by remember { mutableStateOf("") }
+    var newRoomOffset by remember { mutableStateOf<Offset?>(null) }
+    var roomNameInput by remember { mutableStateOf("") }
 
     Column(Modifier.fillMaxSize().padding(12.dp)) {
         Row(
@@ -72,17 +72,24 @@ fun RouterPlacementScreen(
             Button(onClick = { navController.popBackStack() }) {
                 Text("Back")
             }
-            Button(onClick = {
-                viewModel.routers.clear()
-            }) {
-                Text("Clear Routers")
-            }
-            Button(onClick = {
-                navController.navigate(Screen.RoomNaming.route)
-            }) {
-                Text("Next ➡️")
-            }
 
+            Button(onClick = {
+                val (jsonFile, imageFile) = exportFullMapData(
+                    context = context,
+                    widthMeters = viewModel.floorWidthMeters.value,
+                    heightMeters = viewModel.floorHeightMeters.value,
+                    nodes = viewModel.pathNodes,
+                    edges = viewModel.pathEdges,
+                    routers = viewModel.routers,
+                    rooms = viewModel.rooms,
+                    bitmap = bitmap
+                )
+                Log.d("Export", "Saved JSON: ${jsonFile.absolutePath}")
+                Log.d("Export", "Saved Image: ${imageFile.absolutePath}")
+                navController.navigate(Screen.Home.route)
+            }) {
+                Text("Export Setup 📦")
+            }
         }
 
         Spacer(Modifier.height(8.dp))
@@ -103,8 +110,8 @@ fun RouterPlacementScreen(
 
                         val snappedX = (localX / gridSizePxX).roundToInt() * gridSizePxX
                         val snappedY = (localY / gridSizePxY).roundToInt() * gridSizePxY
-                        newRouterOffset = Offset(snappedX, snappedY)
-                        ssidInput = ""
+                        newRoomOffset = Offset(snappedX, snappedY)
+                        roomNameInput = ""
                         showDialog = true
                     }
                 }
@@ -118,9 +125,8 @@ fun RouterPlacementScreen(
                 }) {
                     drawImage(bitmap.asImageBitmap())
 
-                    // ✅ Draw routers with SSID text
-                    for (router in viewModel.routers) {
-                        drawCircle(Color.Red, radius = 8f, center = Offset(router.x, router.y))
+                    viewModel.rooms.forEach { room ->
+                        drawCircle(Color.Magenta, radius = 8f, center = Offset(room.x, room.y))
 
                         val paint = android.graphics.Paint().apply {
                             textSize = 30f
@@ -129,39 +135,37 @@ fun RouterPlacementScreen(
 
                         drawIntoCanvas { canvas ->
                             canvas.nativeCanvas.drawText(
-                                router.ssid,
-                                router.x + 12f,
-                                router.y - 12f,
+                                room.name,
+                                room.x + 12f,
+                                room.y - 12f,
                                 paint
                             )
                         }
                     }
-
                 }
             }
-
         }
 
-        if (showDialog && newRouterOffset != null) {
+        if (showDialog && newRoomOffset != null) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("Enter SSID") },
+                title = { Text("Enter Room Name") },
                 text = {
                     OutlinedTextField(
-                        value = ssidInput,
-                        onValueChange = { ssidInput = it },
-                        label = { Text("SSID") }
+                        value = roomNameInput,
+                        onValueChange = { roomNameInput = it },
+                        label = { Text("Room Name") }
                     )
                 },
                 confirmButton = {
                     Button(onClick = {
-                        val newId = viewModel.routers.size + 1
-                        viewModel.routers.add(
-                            Router(newId, newRouterOffset!!.x, newRouterOffset!!.y, ssidInput)
+                        val newId = viewModel.rooms.size + 1
+                        viewModel.rooms.add(
+                            Room(newId, newRoomOffset!!.x, newRoomOffset!!.y, roomNameInput)
                         )
                         showDialog = false
-                        newRouterOffset = null
-                        ssidInput = ""
+                        newRoomOffset = null
+                        roomNameInput = ""
                     }) {
                         Text("Save")
                     }
@@ -169,7 +173,7 @@ fun RouterPlacementScreen(
                 dismissButton = {
                     TextButton(onClick = {
                         showDialog = false
-                        newRouterOffset = null
+                        newRoomOffset = null
                     }) {
                         Text("Cancel")
                     }
