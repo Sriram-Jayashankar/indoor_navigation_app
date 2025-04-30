@@ -64,7 +64,7 @@ fun PathGraphEditorScreen(
     var startPoint by remember { mutableStateOf<Offset?>(null) }
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
 
-    Column(Modifier.fillMaxSize().padding(12.dp)) {
+    Column(Modifier.fillMaxSize().padding(12.dp).systemBarsPadding()) {
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier.fillMaxWidth()
