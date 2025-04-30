@@ -64,7 +64,7 @@ fun RoomNamingScreen(
     var newRoomOffset by remember { mutableStateOf<Offset?>(null) }
     var roomNameInput by remember { mutableStateOf("") }
 
-    Column(Modifier.fillMaxSize().padding(12.dp)) {
+    Column(Modifier.fillMaxSize().padding(12.dp).systemBarsPadding()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween

@@ -40,6 +40,7 @@ fun AStarTestScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
+                .systemBarsPadding()
         ) {
             Button(onClick = { navController.popBackStack() }) {
                 Text("Back")
