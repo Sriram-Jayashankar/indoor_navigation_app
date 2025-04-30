@@ -22,6 +22,7 @@ sealed class Screen(val route: String) {
     object SavedPlans : Screen("saved_plans")
     object FindLocation : Screen("find_location")
     object RoomNaming : Screen("room_naming")
+    object UserLocation : Screen("user_location")
 }
 
 @Composable
@@ -66,6 +67,10 @@ fun NavGraph(
         composable(Screen.RoomNaming.route) {
             RoomNamingScreen(navController = navController, viewModel = viewModel)
         }
+        composable(Screen.UserLocation.route) {
+            UserLocationScreen(navController = navController, viewModel = viewModel)
+        }
+
 
 
 
