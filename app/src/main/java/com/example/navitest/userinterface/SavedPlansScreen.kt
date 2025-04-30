@@ -1,5 +1,6 @@
 package com.example.navitest.userinterface
 
+import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
@@ -16,6 +17,8 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.navitest.NavitestViewModel
+import com.example.navitest.model.Router
+import com.example.navitest.navigation.Screen
 import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
@@ -67,7 +70,7 @@ fun SavedPlansScreen(
                                 Text("Rename")
                             }
                             Button(onClick = {
-                                performLogicAndNavigate(context, file, navController)
+                                performLogicAndNavigate(context, file, navController, viewModel)
                             }) {
                                 Text("Open")
                             }
@@ -141,32 +144,40 @@ fun shareFile(context: android.content.Context, file: File) {
     context.startActivity(Intent.createChooser(intent, "Share Floor Plan"))
 }
 
-fun performLogicAndNavigate(context: android.content.Context, file: File, navController: NavHostController) {
+fun performLogicAndNavigate(
+    context: Context,
+    file: File,
+    navController: NavHostController,
+    viewModel: NavitestViewModel
+) {
     val jsonString = file.readText()
     val jsonObject = JSONObject(jsonString)
 
+    val width = jsonObject.getDouble("widthMeters").toFloat()
+    val height = jsonObject.getDouble("heightMeters").toFloat()
     val routersJsonArray = jsonObject.getJSONArray("routers")
     val ssids = mutableListOf<String>()
+    val routers = mutableListOf<Router>()
 
     for (i in 0 until routersJsonArray.length()) {
         val routerObject = routersJsonArray.getJSONObject(i)
+        val id = routerObject.getInt("id")
+        val x = routerObject.getDouble("x").toFloat()
+        val y = routerObject.getDouble("y").toFloat()
         val ssid = routerObject.getString("ssid")
-        Log.d("MapInfo","ssid = $ssid")
+        routers.add(Router(id, x, y, ssid))
         ssids.add(ssid)
     }
+
+    // Store width, height and routers in ViewModel
+    viewModel.floorWidthMeters.value = width
+    viewModel.floorHeightMeters.value = height
+    viewModel.routers.clear()
+    viewModel.routers.addAll(routers)
+
     val rssiMap = com.example.navitest.wifi.WifiChecker.getRssiReadings(context, ssids)
 
-    Log.d("WifiScan", "------ Wi-Fi Scan Results ------")
-    ssids.forEach { ssid ->
-        if (rssiMap.containsKey(ssid)) {
-            Log.d("WifiScan", "✅ Found SSID: $ssid → RSSI: ${rssiMap[ssid]} dBm")
-        } else {
-            Log.e("WifiScan", "❌ Did not find SSID: $ssid")
-        }
-    }
-    Log.d("WifiScan", "--------------------------------")
-
-    if (rssiMap.size < 3) {
+    if (rssiMap.size < 1) {
         val foundList = rssiMap.keys
         val notFoundList = ssids.filterNot { it in foundList }
 
@@ -178,18 +189,21 @@ fun performLogicAndNavigate(context: android.content.Context, file: File, navCon
             notFoundList.forEach { append("- $it\n") }
         }
 
-        Log.e("WifiScan", message)
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-
         return
     }
-//    val wifiScanner = com.example.navitest.wifi.WifiScanner(context, ssids) { liveRssiMap ->
-//        Log.d("LiveWifiScan", "📶 Live RSSI update: $liveRssiMap")
-//        // Later: feed this into Kalman filter, trilateration, etc.
-//    }
-//
-//    wifiScanner.start()
 
-//    navController.navigate("target_screen_route") // Use the correct route name
+    // Save selected floorplan path
+    val prefs = context.getSharedPreferences("navitest_prefs", Context.MODE_PRIVATE)
+    prefs.edit().apply {
+        putBoolean("hasPreviousImage", true)
+        putString("imagePath", file.name.replace(".json", ".png"))
+        putFloat("widthMeters", width)
+        putFloat("heightMeters", height)
+        apply()
+    }
+
+    // ✅ Navigate to UserLocationScreen
+    navController.navigate(Screen.UserLocation.route)
 }
 
