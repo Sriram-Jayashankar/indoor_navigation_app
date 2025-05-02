@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -28,59 +29,94 @@ import java.util.*
 fun SavedPlansScreen(
     navController: NavHostController,
     viewModel: NavitestViewModel = viewModel()
-)  {
-    var showRenameDialogFor by remember { mutableStateOf<File?>(null) }
-    var newNameInput by remember { mutableStateOf("") }
+) {
     val context = LocalContext.current
+
+    // 1️⃣ Load saved files into a mutable state list so we can update it
     val savedFiles = remember {
-        context.filesDir
-            .listFiles { file -> file.name.startsWith("floorplan_") && file.name.endsWith(".json") }
-            ?.sortedByDescending { it.lastModified() } ?: emptyList()
+        mutableStateListOf<File>().apply {
+            addAll(loadFloorplanFiles(context))
+        }
     }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)
-        .systemBarsPadding()) {
+    var showRenameDialogFor by remember { mutableStateOf<File?>(null) }
+    var newNameInput by remember { mutableStateOf("") }
 
-        Text("Saved Floor Plans", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(16.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .systemBarsPadding()
+    ) {
+        Text(
+            text = "Saved Floor Plans",
+            style = MaterialTheme.typography.headlineSmall
+        )
+        Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn {
             items(savedFiles) { file ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .clickable { /* Load logic to be added */ },
+                        .padding(vertical = 8.dp),
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(file.name, style = MaterialTheme.typography.titleMedium)
                         Text("Saved: ${formatTimestamp(file.lastModified())}", style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.height(12.dp))
 
+                        // Row with Share / Rename / Delete
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = {
-                                shareFile(context, file)
-                            }) {
+                            Button(onClick = { shareFile(context, file) }) {
                                 Text("Share")
                             }
+
                             OutlinedButton(onClick = {
                                 showRenameDialogFor = file
+                                newNameInput = file.name.removePrefix("floorplan_").removeSuffix(".json")
                             }) {
                                 Text("Rename")
                             }
+
+                            OutlinedButton(onClick = {
+                                if (file.delete()) {
+                                    savedFiles.remove(file)
+                                    Toast.makeText(context, "Deleted ${file.name}", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Failed to delete ${file.name}", Toast.LENGTH_SHORT).show()
+                                }
+                            }) {
+                                Text("Delete")
+                            }
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        // New row with Open + Preview
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = {
                                 performLogicAndNavigate(context, file, navController, viewModel)
                             }) {
                                 Text("Open")
+                            }
+
+                            OutlinedButton(onClick = {
+                                Toast.makeText(context, "Preview not implemented yet", Toast.LENGTH_SHORT).show()
+                                // TODO: Implement preview logic
+                            }) {
+                                Text("Preview")
                             }
                         }
                     }
                 }
             }
         }
+
     }
+
+    // 2️⃣ Rename dialog
     if (showRenameDialogFor != null) {
         AlertDialog(
             onDismissRequest = {
@@ -92,23 +128,48 @@ fun SavedPlansScreen(
                 OutlinedTextField(
                     value = newNameInput,
                     onValueChange = { newNameInput = it },
-                    label = { Text("New Filename (no extension)") }
+                    label = { Text("New Name (no extension)") },
+                    singleLine = true
                 )
             },
             confirmButton = {
                 Button(onClick = {
                     val original = showRenameDialogFor!!
-                    val safeName = newNameInput.replace(Regex("[^a-zA-Z0-9_-]"), "_")
-                    val newFile = File(context.filesDir, "floorplan_${safeName}.json")
-
-                    if (original != newFile) {
-                        original.copyTo(newFile, overwrite = true)
+                    val safeBase = newNameInput
+                        .replace(Regex("[^a-zA-Z0-9_-]"), "_")
+                        .trim()
+                    if (safeBase.isBlank()) {
+                        Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
+                        return@Button
                     }
-
+                    val newFile = File(context.filesDir, "floorplan_${safeBase}.json")
+                    when {
+                        newFile.exists() -> {
+                            Toast.makeText(
+                                context,
+                                "A floorplan with that name already exists",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        original.renameTo(newFile) -> {
+                            // Update list
+                            savedFiles.remove(original)
+                            savedFiles.add(newFile)
+                            savedFiles.sortByDescending { it.lastModified() }
+                            Toast.makeText(
+                                context,
+                                "Renamed to ${newFile.name}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        else -> {
+                            Toast.makeText(context, "Rename failed", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                     showRenameDialogFor = null
                     newNameInput = ""
                 }) {
-                    Text("Save As")
+                    Text("Save")
                 }
             },
             dismissButton = {
@@ -121,29 +182,38 @@ fun SavedPlansScreen(
             }
         )
     }
-
 }
 
+// Helper: load JSON floorplan files
+fun loadFloorplanFiles(context: Context): List<File> =
+    context.filesDir
+        .listFiles { f -> f.name.startsWith("floorplan_") && f.name.endsWith(".json") }
+        ?.sortedByDescending { it.lastModified() }
+        ?: emptyList()
+
+// Format timestamp for display
 fun formatTimestamp(timestamp: Long): String {
     val sdf = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
     return sdf.format(Date(timestamp))
 }
 
-fun shareFile(context: android.content.Context, file: File) {
+// Share via FileProvider
+fun shareFile(context: Context, file: File) {
     val uri = FileProvider.getUriForFile(
         context,
         "${context.packageName}.provider",
         file
     )
-
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "application/json"
         putExtra(Intent.EXTRA_STREAM, uri)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-
     context.startActivity(Intent.createChooser(intent, "Share Floor Plan"))
 }
+
+// Reuse your existing function
+// fun performLogicAndNavigate( ... ) { ... }
 
 fun performLogicAndNavigate(
     context: Context,
@@ -205,6 +275,6 @@ fun performLogicAndNavigate(
     }
 
     // ✅ Navigate to UserLocationScreen
-    navController.navigate(Screen.UserLocation.route)
+    //navController.navigate(Screen.UserLocation.route)
 }
 
