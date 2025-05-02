@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.navitest.NavitestViewModel
-import com.example.navitest.exportFullMapData
+import com.example.navitest.utils.exportFullMapData
 import com.example.navitest.model.Room
 import com.example.navitest.navigation.Screen
 import kotlin.math.roundToInt
