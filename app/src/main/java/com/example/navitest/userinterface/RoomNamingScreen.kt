@@ -74,7 +74,7 @@ fun RoomNamingScreen(
             }
 
             Button(onClick = {
-                val (jsonFile, imageFile) = exportFullMapData(
+                val jsonFile = exportFullMapData(
                     context = context,
                     widthMeters = viewModel.floorWidthMeters.value,
                     heightMeters = viewModel.floorHeightMeters.value,
@@ -85,7 +85,6 @@ fun RoomNamingScreen(
                     bitmap = bitmap
                 )
                 Log.d("Export", "Saved JSON: ${jsonFile.absolutePath}")
-                Log.d("Export", "Saved Image: ${imageFile.absolutePath}")
                 navController.navigate(Screen.Home.route)
             }) {
                 Text("Export Setup 📦")
