@@ -2,14 +2,16 @@ package com.example.navitest
 
 import android.content.Context
 import android.graphics.Bitmap
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.File
-import java.io.FileOutputStream
-import com.example.navitest.model.Node
+import android.util.Base64
 import com.example.navitest.model.Edge
+import com.example.navitest.model.Node
 import com.example.navitest.model.Router
 import com.example.navitest.model.Room
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 
 fun exportFullMapData(
     context: Context,
@@ -20,12 +22,22 @@ fun exportFullMapData(
     routers: List<Router>,
     rooms: List<Room>,
     bitmap: Bitmap
-): Pair<File, File> {
+): File {
     val timestamp = System.currentTimeMillis()
 
+    // 🔁 Convert image to base64
+    val imageByteArray = ByteArrayOutputStream().use { stream ->
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        stream.toByteArray()
+    }
+    val base64Image = Base64.encodeToString(imageByteArray, Base64.DEFAULT)
+
+    // 📦 Build JSON with embedded image
     val json = JSONObject().apply {
         put("widthMeters", widthMeters)
         put("heightMeters", heightMeters)
+        put("imageBase64", base64Image)
+
         put("nodes", JSONArray().apply {
             nodes.forEach { node ->
                 put(JSONObject().apply {
@@ -70,11 +82,5 @@ fun exportFullMapData(
         it.write(json.toString(2).toByteArray())
     }
 
-    val imageFile = File(context.filesDir, "floorplan_${timestamp}.png")
-    FileOutputStream(imageFile).use { fos ->
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
-    }
-
-    return Pair(jsonFile, imageFile)
+    return jsonFile
 }
-

@@ -25,7 +25,6 @@ import com.example.navitest.NavitestViewModel
 import com.example.navitest.model.Router
 import kotlin.math.roundToInt
 import android.util.Log
-import com.example.navitest.exportFullMapData
 import com.example.navitest.navigation.Screen
 
 @Composable
