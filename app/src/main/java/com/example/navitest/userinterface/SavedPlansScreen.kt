@@ -103,8 +103,8 @@ fun SavedPlansScreen(
                             }
 
                             OutlinedButton(onClick = {
-                                Toast.makeText(context, "Preview not implemented yet", Toast.LENGTH_SHORT).show()
-                                // TODO: Implement preview logic
+                                navController.navigate(Screen.Preview.createRoute(file.name))
+
                             }) {
                                 Text("Preview")
                             }
