@@ -24,6 +24,10 @@ import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.navitest.utils.ImportUtils
+
 
 @Composable
 fun SavedPlansScreen(
@@ -38,7 +42,15 @@ fun SavedPlansScreen(
             addAll(loadFloorplanFiles(context))
         }
     }
-
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val success = ImportUtils.importFloorPlanFromUri(context, uri)
+            if (success) {
+                savedFiles.clear()
+                savedFiles.addAll(loadFloorplanFiles(context))
+            }
+        }
+    }
     var showRenameDialogFor by remember { mutableStateOf<File?>(null) }
     var newNameInput by remember { mutableStateOf("") }
 
@@ -48,11 +60,17 @@ fun SavedPlansScreen(
             .padding(16.dp)
             .systemBarsPadding()
     ) {
-        Text(
-            text = "Saved Floor Plans",
-            style = MaterialTheme.typography.headlineSmall
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        Text("Saved Floor Plans", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(8.dp))
+
+        // 🔽 Import Button
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json")) }) {
+                Text("Import Floor Plan")
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
 
         LazyColumn {
             items(savedFiles) { file ->
