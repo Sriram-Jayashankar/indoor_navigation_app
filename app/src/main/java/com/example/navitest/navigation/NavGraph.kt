@@ -7,6 +7,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.navitest.NavitestViewModel
 import com.example.navitest.userinterface.*
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import java.io.File
+import androidx.compose.ui.platform.LocalContext
+
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -23,6 +28,11 @@ sealed class Screen(val route: String) {
     object FindLocation : Screen("find_location")
     object RoomNaming : Screen("room_naming")
     object UserLocation : Screen("user_location")
+    object Preview : Screen("preview/{fileName}") {
+        fun createRoute(fileName: String) = "preview/$fileName"
+    }
+
+
 }
 
 @Composable
@@ -69,6 +79,14 @@ fun NavGraph(
         }
         composable(Screen.UserLocation.route) {
             UserLocationScreen(navController = navController, viewModel = viewModel)
+        }
+        composable(
+            route = Screen.Preview.route,
+            arguments = listOf(navArgument("fileName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val fileName = backStackEntry.arguments?.getString("fileName")!!
+            val file = File(LocalContext.current.filesDir, fileName)
+            PreviewScreen(navController = navController, file = file)
         }
 
 
