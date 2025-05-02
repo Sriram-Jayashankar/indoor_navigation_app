@@ -31,6 +31,11 @@ sealed class Screen(val route: String) {
     object Preview : Screen("preview/{fileName}") {
         fun createRoute(fileName: String) = "preview/$fileName"
     }
+    object Execution : Screen("execution/{filename}") {
+        fun createRoute(filename: String) = "execution/$filename"
+    }
+
+
 
 
 }
@@ -88,6 +93,17 @@ fun NavGraph(
             val file = File(LocalContext.current.filesDir, fileName)
             PreviewScreen(navController = navController, file = file)
         }
+        composable(
+            route = Screen.Execution.route,
+            arguments = listOf(navArgument("filename") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val context = LocalContext.current
+            val filename = backStackEntry.arguments?.getString("filename") ?: return@composable
+            val file = File(context.filesDir, filename)
+            ExecutionScreen(file = file, navController = navController, viewModel = viewModel)
+        }
+
+
 
 
 

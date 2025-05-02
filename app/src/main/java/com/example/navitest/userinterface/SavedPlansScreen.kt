@@ -115,7 +115,8 @@ fun SavedPlansScreen(
                         // New row with Open + Preview
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = {
-                                performLogicAndNavigate(context, file, navController, viewModel)
+                                //performLogicAndNavigate(context, file, navController, viewModel)
+                                navController.navigate(Screen.Execution.createRoute(file.name))
                             }) {
                                 Text("Open")
                             }
