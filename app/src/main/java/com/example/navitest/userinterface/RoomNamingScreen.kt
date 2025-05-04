@@ -12,11 +12,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -25,8 +25,7 @@ import com.example.navitest.NavitestViewModel
 import com.example.navitest.utils.exportFullMapData
 import com.example.navitest.model.Room
 import com.example.navitest.navigation.Screen
-import kotlin.math.roundToInt
-import android.util.Log
+import kotlin.math.*
 
 @Composable
 fun RoomNamingScreen(
@@ -34,6 +33,7 @@ fun RoomNamingScreen(
     viewModel: NavitestViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
     val imageUri = viewModel.floorMapUri.value
     val floorWidthMeters = viewModel.floorWidthMeters.value
     val floorHeightMeters = viewModel.floorHeightMeters.value
@@ -46,32 +46,35 @@ fun RoomNamingScreen(
     }
 
     val bitmap = remember(imageUri) {
-        val input = context.contentResolver.openInputStream(imageUri)
-        BitmapFactory.decodeStream(input)
+        context.contentResolver.openInputStream(imageUri).use { input ->
+            BitmapFactory.decodeStream(input)
+        }
     } ?: return
 
-    val imageWidth = bitmap.width
-    val imageHeight = bitmap.height
-
+    val imageWidth = bitmap.width.toFloat()
+    val imageHeight = bitmap.height.toFloat()
     val stepMeters = 0.25f
     val divisionsX = (floorWidthMeters / stepMeters).toInt()
     val divisionsY = (floorHeightMeters / stepMeters).toInt()
-    val gridSizePxX = imageWidth.toFloat() / divisionsX
-    val gridSizePxY = imageHeight.toFloat() / divisionsY
+    val gridSizePxX = imageWidth / divisionsX
+    val gridSizePxY = imageHeight / divisionsY
 
-    var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     var showDialog by remember { mutableStateOf(false) }
     var newRoomOffset by remember { mutableStateOf<Offset?>(null) }
     var roomNameInput by remember { mutableStateOf("") }
 
-    Column(Modifier.fillMaxSize().padding(12.dp).systemBarsPadding()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(12.dp)
+            .systemBarsPadding()
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(onClick = { navController.popBackStack() }) {
-                Text("Back")
-            }
+            Button(onClick = { navController.popBackStack() }) { Text("Back") }
+            Button(onClick = { viewModel.rooms.clear() }) { Text("Clear Rooms") }
 
             Button(onClick = {
                 val jsonFile = exportFullMapData(
@@ -84,59 +87,61 @@ fun RoomNamingScreen(
                     rooms = viewModel.rooms,
                     bitmap = bitmap
                 )
-                Log.d("Export", "Saved JSON: ${jsonFile.absolutePath}")
                 navController.navigate(Screen.Home.route)
-            }) {
-                Text("Export Setup 📦")
-            }
+            }) { Text("Export Setup ") }
         }
 
         Spacer(Modifier.height(8.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .onGloballyPositioned { canvasSize = it.size }
-                .pointerInput(true) {
-                    detectTapGestures { tap ->
-                        val offsetX = (canvasSize.width - imageWidth) / 2f
-                        val offsetY = (canvasSize.height - imageHeight) / 2f
-
-                        val localX = tap.x - offsetX
-                        val localY = tap.y - offsetY
-
-                        if (localX !in 0f..imageWidth.toFloat() || localY !in 0f..imageHeight.toFloat()) return@detectTapGestures
-
-                        val snappedX = (localX / gridSizePxX).roundToInt() * gridSizePxX
-                        val snappedY = (localY / gridSizePxY).roundToInt() * gridSizePxY
-                        newRoomOffset = Offset(snappedX, snappedY)
-                        roomNameInput = ""
-                        showDialog = true
-                    }
-                }
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val offsetX = (size.width - imageWidth.toFloat()) / 2f
-                val offsetY = (size.height - imageHeight.toFloat()) / 2f
+            val constraints = this
+            val cW = with(density) { constraints.maxWidth.toPx() }
+            val cH = with(density) { constraints.maxHeight.toPx() }
+            val scale = min(cW / imageWidth, cH / imageHeight)
+            val dstW = imageWidth * scale
+            val dstH = imageHeight * scale
+            val offX = (cW - dstW) / 2f
+            val offY = (cH - dstH) / 2f
 
-                withTransform({
-                    translate(offsetX, offsetY)
-                }) {
-                    drawImage(bitmap.asImageBitmap())
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { tap ->
+                            val imgX = (tap.x - offX) / scale
+                            val imgY = (tap.y - offY) / scale
+                            if (imgX !in 0f..imageWidth || imgY !in 0f..imageHeight) return@detectTapGestures
+
+                            val snappedX = (imgX / gridSizePxX).roundToInt() * gridSizePxX
+                            val snappedY = (imgY / gridSizePxY).roundToInt() * gridSizePxY
+                            newRoomOffset = Offset(snappedX, snappedY)
+                            roomNameInput = ""
+                            showDialog = true
+                        }
+                    }
+            ) {
+                Canvas(Modifier.fillMaxSize()) {
+                    drawImage(
+                        image = bitmap.asImageBitmap(),
+                        dstOffset = IntOffset(offX.roundToInt(), offY.roundToInt()),
+                        dstSize = IntSize(dstW.roundToInt(), dstH.roundToInt())
+                    )
 
                     viewModel.rooms.forEach { room ->
-                        drawCircle(Color.Magenta, radius = 8f, center = Offset(room.x, room.y))
-
+                        val pos = Offset(offX + room.x * scale, offY + room.y * scale)
+                        drawCircle(Color.Magenta, 8f, pos)
                         val paint = android.graphics.Paint().apply {
                             textSize = 30f
                             color = android.graphics.Color.BLACK
                         }
-
                         drawIntoCanvas { canvas ->
                             canvas.nativeCanvas.drawText(
                                 room.name,
-                                room.x + 12f,
-                                room.y - 12f,
+                                pos.x + 12f,
+                                pos.y - 12f,
                                 paint
                             )
                         }
@@ -163,19 +168,10 @@ fun RoomNamingScreen(
                             Room(newId, newRoomOffset!!.x, newRoomOffset!!.y, roomNameInput)
                         )
                         showDialog = false
-                        newRoomOffset = null
-                        roomNameInput = ""
-                    }) {
-                        Text("Save")
-                    }
+                    }) { Text("Save") }
                 },
                 dismissButton = {
-                    TextButton(onClick = {
-                        showDialog = false
-                        newRoomOffset = null
-                    }) {
-                        Text("Cancel")
-                    }
+                    TextButton(onClick = { showDialog = false }) { Text("Cancel") }
                 }
             )
         }

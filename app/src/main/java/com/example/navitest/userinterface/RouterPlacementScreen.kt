@@ -3,8 +3,6 @@ package com.example.navitest.userinterface
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,19 +11,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.navitest.NavitestViewModel
 import com.example.navitest.model.Router
-import kotlin.math.roundToInt
-import android.util.Log
 import com.example.navitest.navigation.Screen
+import kotlin.math.*
 
 @Composable
 fun RouterPlacementScreen(
@@ -33,6 +32,7 @@ fun RouterPlacementScreen(
     viewModel: NavitestViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
     val imageUri = viewModel.floorMapUri.value
     val floorWidthMeters = viewModel.floorWidthMeters.value
     val floorHeightMeters = viewModel.floorHeightMeters.value
@@ -45,100 +45,93 @@ fun RouterPlacementScreen(
     }
 
     val bitmap = remember(imageUri) {
-        val input = context.contentResolver.openInputStream(imageUri)
-        BitmapFactory.decodeStream(input)
+        context.contentResolver.openInputStream(imageUri).use { input ->
+            BitmapFactory.decodeStream(input)
+        }
     } ?: return
 
-    val imageWidth = bitmap.width
-    val imageHeight = bitmap.height
-
+    val imageWidth = bitmap.width.toFloat()
+    val imageHeight = bitmap.height.toFloat()
     val stepMeters = 0.25f
     val divisionsX = (floorWidthMeters / stepMeters).toInt()
     val divisionsY = (floorHeightMeters / stepMeters).toInt()
-    val gridSizePxX = imageWidth.toFloat() / divisionsX
-    val gridSizePxY = imageHeight.toFloat() / divisionsY
+    val gridSizePxX = imageWidth / divisionsX
+    val gridSizePxY = imageHeight / divisionsY
 
-    var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     var showDialog by remember { mutableStateOf(false) }
     var newRouterOffset by remember { mutableStateOf<Offset?>(null) }
     var ssidInput by remember { mutableStateOf("") }
 
-    Column(Modifier.fillMaxSize().padding(12.dp).systemBarsPadding()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(12.dp)
+            .systemBarsPadding()
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(onClick = { navController.popBackStack() }) {
-                Text("Back")
-            }
-            Button(onClick = {
-                viewModel.routers.clear()
-            }) {
-                Text("Clear Routers")
-            }
-            Button(onClick = {
-                navController.navigate(Screen.RoomNaming.route)
-            }) {
-                Text("Next ➡️")
-            }
-
+            Button(onClick = { navController.popBackStack() }) { Text("Back") }
+            Button(onClick = { viewModel.routers.clear() }) { Text("Clear Routers") }
+            Button(onClick = { navController.navigate(Screen.RoomNaming.route) }) { Text("Room Setup") }
         }
-
         Spacer(Modifier.height(8.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .onGloballyPositioned { canvasSize = it.size }
-                .pointerInput(true) {
-                    detectTapGestures { tap ->
-                        val offsetX = (canvasSize.width - imageWidth) / 2f
-                        val offsetY = (canvasSize.height - imageHeight) / 2f
-
-                        val localX = tap.x - offsetX
-                        val localY = tap.y - offsetY
-
-                        if (localX !in 0f..imageWidth.toFloat() || localY !in 0f..imageHeight.toFloat()) return@detectTapGestures
-
-                        val snappedX = (localX / gridSizePxX).roundToInt() * gridSizePxX
-                        val snappedY = (localY / gridSizePxY).roundToInt() * gridSizePxY
-                        newRouterOffset = Offset(snappedX, snappedY)
-                        ssidInput = ""
-                        showDialog = true
-                    }
-                }
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val offsetX = (size.width - imageWidth.toFloat()) / 2f
-                val offsetY = (size.height - imageHeight.toFloat()) / 2f
+            val cW = with(density) { maxWidth.toPx() }
+            val cH = with(density) { maxHeight.toPx() }
+            val scale = min(cW / imageWidth, cH / imageHeight)
+            val dstW = imageWidth * scale
+            val dstH = imageHeight * scale
+            val offX = (cW - dstW) / 2f
+            val offY = (cH - dstH) / 2f
 
-                withTransform({
-                    translate(offsetX, offsetY)
-                }) {
-                    drawImage(bitmap.asImageBitmap())
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { tap ->
+                            val imgX = (tap.x - offX) / scale
+                            val imgY = (tap.y - offY) / scale
+                            if (imgX !in 0f..imageWidth || imgY !in 0f..imageHeight) return@detectTapGestures
 
-                    // ✅ Draw routers with SSID text
-                    for (router in viewModel.routers) {
-                        drawCircle(Color.Red, radius = 8f, center = Offset(router.x, router.y))
+                            val snappedX = (imgX / gridSizePxX).roundToInt() * gridSizePxX
+                            val snappedY = (imgY / gridSizePxY).roundToInt() * gridSizePxY
+                            newRouterOffset = Offset(snappedX, snappedY)
+                            ssidInput = ""
+                            showDialog = true
+                        }
+                    }
+            ) {
+                Canvas(Modifier.fillMaxSize()) {
+                    drawImage(
+                        image = bitmap.asImageBitmap(),
+                        dstOffset = IntOffset(offX.roundToInt(), offY.roundToInt()),
+                        dstSize = IntSize(dstW.roundToInt(), dstH.roundToInt())
+                    )
 
+                    viewModel.routers.forEach { router ->
+                        val pos = Offset(offX + router.x * scale, offY + router.y * scale)
+                        drawCircle(Color.Red, 8f, pos)
                         val paint = android.graphics.Paint().apply {
                             textSize = 30f
                             color = android.graphics.Color.BLACK
                         }
-
                         drawIntoCanvas { canvas ->
                             canvas.nativeCanvas.drawText(
                                 router.ssid,
-                                router.x + 12f,
-                                router.y - 12f,
+                                pos.x + 12f,
+                                pos.y - 12f,
                                 paint
                             )
                         }
                     }
-
                 }
             }
-
         }
 
         if (showDialog && newRouterOffset != null) {
@@ -159,19 +152,10 @@ fun RouterPlacementScreen(
                             Router(newId, newRouterOffset!!.x, newRouterOffset!!.y, ssidInput)
                         )
                         showDialog = false
-                        newRouterOffset = null
-                        ssidInput = ""
-                    }) {
-                        Text("Save")
-                    }
+                    }) { Text("Save") }
                 },
                 dismissButton = {
-                    TextButton(onClick = {
-                        showDialog = false
-                        newRouterOffset = null
-                    }) {
-                        Text("Cancel")
-                    }
+                    TextButton(onClick = { showDialog = false }) { Text("Cancel") }
                 }
             )
         }
