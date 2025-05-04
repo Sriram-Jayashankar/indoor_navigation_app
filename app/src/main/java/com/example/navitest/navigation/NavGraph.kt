@@ -34,6 +34,8 @@ sealed class Screen(val route: String) {
     object Execution : Screen("execution/{filename}") {
         fun createRoute(filename: String) = "execution/$filename"
     }
+    object Readme : Screen("readme")
+
 
 
 
@@ -102,6 +104,10 @@ fun NavGraph(
             val file = File(context.filesDir, filename)
             ExecutionScreen(file = file, navController = navController, viewModel = viewModel)
         }
+        composable(Screen.Readme.route) {
+            ReadmeScreen()
+        }
+
 
 
 

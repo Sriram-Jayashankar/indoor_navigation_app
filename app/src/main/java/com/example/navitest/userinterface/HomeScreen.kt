@@ -68,17 +68,19 @@ fun HomeScreen(
                     modifier = Modifier.padding(bottom = 32.dp)
                 )
 
+                ActionButton("ReadMe") {
+                    navController.navigate(Screen.Readme.route)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 ActionButton("Setup Floor Map") {
                     navController.navigate(Screen.FloorMap.route)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                ActionButton("Settings") {
-                    navController.navigate(Screen.Settings.route)
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
 
                 ActionButton("View Saved Floor Plans") {
                     navController.navigate(Screen.SavedPlans.route)
