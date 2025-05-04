@@ -113,20 +113,27 @@ fun ExecutionScreen(
     var roomNodeId          by remember { mutableStateOf<Int?>(null) }
     var pathNodes           by remember { mutableStateOf<List<Node>>(emptyList()) }
 
-    /* ─── Wi-Fi scanner → snap user to nearest node ─── */
     DisposableEffect(Unit) {
         val scanner = SmartWifiScanner(context, routers.map { it.ssid }) { raw ->
             if (raw.size < 3) {
                 Toast.makeText(context, "Need at least 3 routers", Toast.LENGTH_SHORT).show()
                 return@SmartWifiScanner
             }
+
+            // Take the 3 routers with the strongest (least negative) RSSI
+            val top3 = raw.entries
+                .sortedByDescending { it.value } // higher RSSI = stronger signal
+                .take(3)
+                .associate { it.key to it.value } // back to map
+
             val rssi = ExecutionUtils.applyKalman1D(
-                ExecutionUtils.mapToRouterRssi(routers, raw)
+                ExecutionUtils.mapToRouterRssi(routers, top3)
             )
-            val pos  = ExecutionUtils.trilaterateCentroidWeighted(routers, rssi)
+
+            val pos = ExecutionUtils.trilaterateCentroidWeighted(routers, rssi)
             if (pos != Offset.Zero) {
                 val nearest = nodes.minByOrNull { hypot(it.x - pos.x, it.y - pos.y) }
-                userNodeId  = nearest?.id
+                userNodeId = nearest?.id
 
                 nearest?.let {
                     android.util.Log.d("ExecutionScreen", "User plotted at: (${it.x}, ${it.y}) [Node ID: ${it.id}]")
