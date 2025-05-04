@@ -67,6 +67,9 @@ fun PathGraphEditorScreen(
             .padding(12.dp)
             .systemBarsPadding()
     ) {
+        Text("\uD83D\uDC63 Enter Real-world Paths", style = MaterialTheme.typography.titleMedium)
+
+        Spacer(Modifier.height(8.dp))
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier.fillMaxWidth()
