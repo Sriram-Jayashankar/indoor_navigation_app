@@ -8,6 +8,7 @@ import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 
 /**
  * Reusable Wi-Fi scanner that continuously scans for specific SSIDs
@@ -23,6 +24,7 @@ class WifiScanner(
         context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
     private val scanHandler = Handler(Looper.getMainLooper())
     private val scanInterval = 1000L // 1 second
+    private val TAG = "WifiScanner"
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context?, intent: Intent?) {
@@ -33,7 +35,8 @@ class WifiScanner(
                 val result = scanResults.find { it.SSID == ssid }
                 result?.let {
                     resultMap[ssid] = it.level
-                }
+                    Log.d(TAG, "📡 Found SSID: \"$ssid\" → RSSI: ${it.level} dBm")
+                } ?: Log.d(TAG, "❌ SSID \"$ssid\" not found in scan results")
             }
 
             onScanResults(resultMap)
@@ -42,18 +45,29 @@ class WifiScanner(
 
     private val scanRunnable = object : Runnable {
         override fun run() {
-            wifiManager.startScan()
+            val started = wifiManager.startScan()
+            if (!started) {
+                Log.w(TAG, "⚠️ Failed to start Wi-Fi scan")
+            } else {
+                Log.d(TAG, "📶 Wi-Fi scan started")
+            }
             scanHandler.postDelayed(this, scanInterval)
         }
     }
 
     fun start() {
+        Log.d(TAG, "🔄 Starting continuous scan for: $targetSSIDs")
         context.registerReceiver(receiver, IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))
         scanHandler.post(scanRunnable)
     }
 
     fun stop() {
-        context.unregisterReceiver(receiver)
+        Log.d(TAG, "🛑 Stopping Wi-Fi scanner")
+        try {
+            context.unregisterReceiver(receiver)
+        } catch (e: IllegalArgumentException) {
+            Log.w(TAG, "⚠️ Receiver was already unregistered or never registered.")
+        }
         scanHandler.removeCallbacks(scanRunnable)
     }
 }
