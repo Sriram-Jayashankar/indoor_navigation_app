@@ -89,7 +89,7 @@ fun AStarTestScreen(
 
                     // Path
                     path.zipWithNext().forEach { (a, b) ->
-                        drawLine(Color(0xFFFF9800), Offset(a.x, a.y), Offset(b.x, b.y), strokeWidth = 4f)
+                        drawLine(Color(0xFFFF9800), Offset(a.x, a.y), Offset(b.x, b.y), strokeWidth = 20f)
                     }
 
                     // All nodes
