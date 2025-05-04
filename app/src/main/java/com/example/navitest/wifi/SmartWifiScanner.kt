@@ -25,9 +25,9 @@ class SmartWifiScanner(
     private val handler = Handler(Looper.getMainLooper())
     private val TAG = "SmartWifiScanner"
 
-    private var delayMs = 1_000L          // start with 2 s
-    private val MIN_DELAY =1_000L
-    private val MAX_DELAY = 1_000L
+    private var delayMs = 2_000L          // start with 2 s
+    private val MIN_DELAY = 2_000L
+    private val MAX_DELAY = 30_000L
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context?, intent: Intent?) {
