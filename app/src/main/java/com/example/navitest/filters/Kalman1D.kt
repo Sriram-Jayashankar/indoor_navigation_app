@@ -12,8 +12,7 @@ object Kalman1D {
         val result = mutableMapOf<Int, Float>()
         for ((id, value) in raw) {
             val filter = filters.getOrPut(id) {
-                KalmanFilter1D(q = 0.5f, r = 2f, initialEstimate = value, initialError = 5f)
-            }
+                KalmanFilter1D(q = 0.4f, r = 5f, initialEstimate = value, initialError = 3f) }
             filter.update(value)
             result[id] = filter.xhat
         }
