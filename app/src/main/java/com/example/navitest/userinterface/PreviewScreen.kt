@@ -84,6 +84,9 @@ fun PreviewScreen(
     var showPaths by remember { mutableStateOf(true) }
 
     Column(Modifier.fillMaxSize().padding(12.dp).systemBarsPadding()) {
+        Text("Preview Screen", style = MaterialTheme.typography.titleMedium)
+
+        Spacer(Modifier.height(8.dp))
         BoxWithConstraints(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             contentAlignment = Alignment.Center

@@ -69,6 +69,9 @@ fun RoomNamingScreen(
             .padding(12.dp)
             .systemBarsPadding()
     ) {
+        Text("Room Setup Screen", style = MaterialTheme.typography.titleMedium)
+
+        Spacer(Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween

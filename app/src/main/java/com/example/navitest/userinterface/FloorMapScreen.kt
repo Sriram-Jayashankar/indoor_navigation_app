@@ -71,7 +71,7 @@ fun FloorMapScreen(
 
     // UI layout
     Column(Modifier.fillMaxSize().padding(16.dp).systemBarsPadding()) {
-        Text("📏 Enter Real-world Dimensions", style = MaterialTheme.typography.titleMedium)
+        Text("Map Input Screen", style = MaterialTheme.typography.titleMedium)
 
         Spacer(Modifier.height(8.dp))
 

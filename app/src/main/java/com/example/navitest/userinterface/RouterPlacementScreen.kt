@@ -68,6 +68,9 @@ fun RouterPlacementScreen(
             .padding(12.dp)
             .systemBarsPadding()
     ) {
+        Text("Router Setup Screen", style = MaterialTheme.typography.titleMedium)
+
+        Spacer(Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
